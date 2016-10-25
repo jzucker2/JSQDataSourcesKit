@@ -37,6 +37,10 @@ where CellFactory.Item == DataSource.Item, SupplementaryFactory.Item == DataSour
     public let supplementaryFactory: SupplementaryFactory
 
     fileprivate var bridgedDataSource: BridgedDataSource?
+    
+    public var accessQueue: DispatchQueue = {
+        return DispatchQueue(label: "Test", qos: .userInitiated, attributes: [.concurrent])
+    }()
 
 
     // MARK: Initialization
@@ -117,22 +121,35 @@ public extension DataSourceProvider where CellFactory.View: UICollectionViewCell
 
         let dataSource = BridgedDataSource(
             numberOfSections: { [unowned self] () -> Int in
-                return self.dataSource.numberOfSections()
+                var result = 0
+                self.accessQueue.sync {
+                    result = self.dataSource.numberOfSections()
+                }
+                return result
             },
             numberOfItemsInSection: { [unowned self] (section) -> Int in
-                return self.dataSource.numberOfItems(inSection: section)
+                var result = 0
+                self.accessQueue.sync {
+                    result = self.dataSource.numberOfItems(inSection: section)
+                }
+                return result
             })
 
         dataSource.collectionCellForItemAtIndexPath = { [unowned self] (collectionView, indexPath) -> UICollectionViewCell in
-            let item = self.dataSource.item(atIndexPath: indexPath)!
-            return self.cellFactory.collectionCellFor(item: item, collectionView: collectionView, indexPath: indexPath)
+            var item: CellFactory.Item?
+            self.accessQueue.sync {
+                item = self.dataSource.item(atIndexPath: indexPath)
+            }
+            return self.cellFactory.collectionCellFor(item: item!, collectionView: collectionView, indexPath: indexPath)
         }
 
         dataSource.collectionSupplementaryViewAtIndexPath = { [unowned self] (collectionView, kind, indexPath) -> UICollectionReusableView in
             var item: SupplementaryFactory.Item?
-            if indexPath.section < self.dataSource.numberOfSections() {
-                if indexPath.item < self.dataSource.numberOfItems(inSection: indexPath.section) {
-                    item = self.dataSource.item(atIndexPath: indexPath)
+            self.accessQueue.sync {
+                if indexPath.section < self.dataSource.numberOfSections() {
+                    if indexPath.item < self.dataSource.numberOfItems(inSection: indexPath.section) {
+                        item = self.dataSource.item(atIndexPath: indexPath)
+                    }
                 }
             }
             return self.supplementaryFactory.supplementaryViewFor(item: item,

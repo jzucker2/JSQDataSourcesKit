@@ -80,16 +80,16 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
     }
 
     /// Returns the `NSFetchedResultsControllerDelegate` object for a collection view.
-    public var collectionDelegate: NSFetchedResultsControllerDelegate {
+    public func collectionDelegate(accessQueue: DispatchQueue) -> NSFetchedResultsControllerDelegate {
         if bridgedDelegate == nil {
-            bridgedDelegate = bridgedCollectionFetchedResultsDelegate()
+            bridgedDelegate = bridgedCollectionFetchedResultsDelegate(accessQueue: accessQueue)
         }
         return bridgedDelegate!
     }
 
     private weak var collectionView: UICollectionView? { return cellParentView }
 
-    private func bridgedCollectionFetchedResultsDelegate() -> BridgedFetchedResultsDelegate {
+    private func bridgedCollectionFetchedResultsDelegate(accessQueue: DispatchQueue) -> BridgedFetchedResultsDelegate {
         let delegate = BridgedFetchedResultsDelegate(
             willChangeContent: { [unowned self] (controller) in
                 self.sectionChanges.removeAll()
@@ -121,12 +121,15 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                 }
             },
             didChangeContent: { [unowned self] (controller) in
-                self.collectionView?.performBatchUpdates({ [weak self] in
-                    self?.applyObjectChanges()
-                    self?.applySectionChanges()
-                    }, completion:{ [weak self] finished in
-                        self?.reloadSupplementaryViewsIfNeeded()
+                let barrierWorkItem = DispatchWorkItem(qos: .userInitiated, flags: [.barrier], block: { 
+                    self.collectionView?.performBatchUpdates({ [weak self] in
+                        self?.applyObjectChanges()
+                        self?.applySectionChanges()
+                        }, completion:{ [weak self] finished in
+                            self?.reloadSupplementaryViewsIfNeeded()
                     })
+                })
+                accessQueue.async(execute: barrierWorkItem)
             })
 
         return delegate
