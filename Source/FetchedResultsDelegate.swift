@@ -123,10 +123,15 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
             didChangeContent: { [unowned self] (controller) in
                 let barrierWorkItem = DispatchWorkItem(qos: .userInitiated, flags: [.barrier], block: { 
                     self.collectionView?.performBatchUpdates({ [weak self] in
+                        print("\(#function) performBatchUpdates begin")
                         self?.applyObjectChanges()
+                        print("\(#function) performBatchUpdates finished object changes")
                         self?.applySectionChanges()
+                        print("\(#function) performBatchUpdates end")
                         }, completion:{ [weak self] finished in
+                            print("\(#function) didChangeContent completion before reload supplementary")
                             self?.reloadSupplementaryViewsIfNeeded()
+                            print("\(#function) didChangeContent completion after reload supplementary")
                     })
                 })
                 accessQueue.async(execute: barrierWorkItem)
@@ -179,6 +184,7 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
 
     private func reloadSupplementaryViewsIfNeeded() {
         if sectionChanges.count > 0 {
+            print("\(#function) will reloadData")
             collectionView?.reloadData()
         }
     }
