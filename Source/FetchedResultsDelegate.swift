@@ -103,7 +103,7 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                 }
             },
             didChangeSection: { [unowned self] (controller, sectionInfo, sectionIndex, changeType) in
-                print("\(#function) didChangeSection")
+                print("\(#function) didChangeSection sectionInfo: \(sectionInfo) sectionIndex: \(sectionIndex) changeType: \(changeType.rawValue)")
                 accessQueue.async {
                     self.sectionChanges.append((changeType, sectionIndex))
                 }
