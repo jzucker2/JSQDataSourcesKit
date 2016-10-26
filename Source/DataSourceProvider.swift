@@ -38,9 +38,12 @@ where CellFactory.Item == DataSource.Item, SupplementaryFactory.Item == DataSour
 
     fileprivate var bridgedDataSource: BridgedDataSource?
     
+    /*
     public var accessQueue: DispatchQueue = {
         return DispatchQueue(label: "Test", qos: .userInitiated, attributes: [.concurrent])
     }()
+    */
+    public private(set) let accessQueue: DispatchQueue
 
 
     // MARK: Initialization
@@ -58,10 +61,11 @@ where CellFactory.Item == DataSource.Item, SupplementaryFactory.Item == DataSour
      the generic constraints for Swift. You can simply pass the same `cellFactory` here. The parameter will be ignored.
      The same applies to collection views that do not have supplementary views. Again, the parameter will be ignored.
      */
-    public init(dataSource: DataSource, cellFactory: CellFactory, supplementaryFactory: SupplementaryFactory) {
+    public init(dataSource: DataSource, cellFactory: CellFactory, supplementaryFactory: SupplementaryFactory, accessQueue: DispatchQueue = DispatchQueue(label: "Test", qos: .userInitiated, attributes: [.concurrent])) {
         self.dataSource = dataSource
         self.cellFactory = cellFactory
         self.supplementaryFactory = supplementaryFactory
+        self.accessQueue = accessQueue
     }
 }
 
