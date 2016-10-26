@@ -43,7 +43,7 @@ where CellFactory.Item == DataSource.Item, SupplementaryFactory.Item == DataSour
         return DispatchQueue(label: "Test", qos: .userInitiated, attributes: [.concurrent])
     }()
     */
-    public private(set) let accessQueue: DispatchQueue
+    public private(set) var accessQueue: DispatchQueue
 
 
     // MARK: Initialization
