@@ -121,20 +121,22 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                 }
             },
             didChangeContent: { [unowned self] (controller) in
-                let barrierWorkItem = DispatchWorkItem(qos: .userInitiated, flags: [.barrier], block: { 
-                    self.collectionView?.performBatchUpdates({ [weak self] in
-                        print("\(#function) performBatchUpdates begin")
+                self.collectionView?.performBatchUpdates({ [weak self] in
+                    print("\(#function) didChangeContent performBatchUpdates begin")
+                    let barrierWorkItem = DispatchWorkItem(qos: .userInitiated, flags: [.barrier], block: {
+                        print("\(#function) didChangeContent performBatchUpdates barrier work start")
                         self?.applyObjectChanges()
-                        print("\(#function) performBatchUpdates finished object changes")
+                        print("\(#function) didChangeContent performBatchUpdates barrier work finished object changes")
                         self?.applySectionChanges()
-                        print("\(#function) performBatchUpdates end")
-                        }, completion:{ [weak self] finished in
-                            print("\(#function) didChangeContent completion before reload supplementary")
-                            self?.reloadSupplementaryViewsIfNeeded()
-                            print("\(#function) didChangeContent completion after reload supplementary")
+                        print("\(#function) didChangeContent performBatchUpdates barrier work finished section changes")
                     })
+                    self.accessQueue.sync(execute: barrierWorkItem) // or async?
+                    print("\(#function) didChangeContent performBatchUpdates end")
+                    }, completion:{ [weak self] finished in
+                        print("\(#function) didChangeContent completion before reload supplementary")
+                        self?.reloadSupplementaryViewsIfNeeded()
+                        print("\(#function) didChangeContent completion after reload supplementary")
                 })
-                accessQueue.async(execute: barrierWorkItem)
             })
 
         return delegate
