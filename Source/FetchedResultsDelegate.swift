@@ -92,38 +92,47 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
     private func bridgedCollectionFetchedResultsDelegate(accessQueue: DispatchQueue) -> BridgedFetchedResultsDelegate {
         let delegate = BridgedFetchedResultsDelegate(
             willChangeContent: { [unowned self] (controller) in
-                self.sectionChanges.removeAll()
-                self.objectChanges.removeAll()
-                self.updatedObjects.removeAll()
+                
                 print("------------------------------------------------------")
                 print("\(#function) willChangeContent")
                 print("------------------------------------------------------")
+                accessQueue.async {
+                    self.sectionChanges.removeAll()
+                    self.objectChanges.removeAll()
+                    self.updatedObjects.removeAll()
+                }
             },
             didChangeSection: { [unowned self] (controller, sectionInfo, sectionIndex, changeType) in
                 print("\(#function) didChangeSection")
-                self.sectionChanges.append((changeType, sectionIndex))
+                accessQueue.async {
+                    self.sectionChanges.append((changeType, sectionIndex))
+                }
+                
             },
             didChangeObject: { [unowned self] (controller, anyObject, indexPath: IndexPath?, changeType, newIndexPath: IndexPath?) in
                 print("\(#function) didChangeObject indexPath: \(indexPath) changeType: \(changeType.rawValue) newIndexPath: \(newIndexPath)")
-                switch changeType {
-                case .insert:
-                    if let insertIndexPath = newIndexPath {
-                        self.objectChanges.append((changeType, [insertIndexPath]))
-                    }
-                case .delete:
-                    if let deleteIndexPath = indexPath {
-                        self.objectChanges.append((changeType, [deleteIndexPath]))
-                    }
-                case .update:
-                    if let indexPath = indexPath {
-                        self.objectChanges.append((changeType, [indexPath]))
-                        self.updatedObjects[indexPath] = anyObject as? Item
-                    }
-                case .move:
-                    if let old = indexPath, let new = newIndexPath {
-                        self.objectChanges.append((changeType, [old, new]))
+                accessQueue.async {
+                    switch changeType {
+                    case .insert:
+                        if let insertIndexPath = newIndexPath {
+                            self.objectChanges.append((changeType, [insertIndexPath]))
+                        }
+                    case .delete:
+                        if let deleteIndexPath = indexPath {
+                            self.objectChanges.append((changeType, [deleteIndexPath]))
+                        }
+                    case .update:
+                        if let indexPath = indexPath {
+                            self.objectChanges.append((changeType, [indexPath]))
+                            self.updatedObjects[indexPath] = anyObject as? Item
+                        }
+                    case .move:
+                        if let old = indexPath, let new = newIndexPath {
+                            self.objectChanges.append((changeType, [old, new]))
+                        }
                     }
                 }
+                
             },
             didChangeContent: { [unowned self] (controller) in
                 print("\(#function) didChangeContent begin before performBatchUpdates")
@@ -140,7 +149,10 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                     print("\(#function) didChangeContent performBatchUpdates end")
                     }, completion:{ [weak self] finished in
                         print("\(#function) didChangeContent completion before reload supplementary")
-                        self?.reloadSupplementaryViewsIfNeeded()
+                        accessQueue.async {
+                            self?.reloadSupplementaryViewsIfNeeded()
+                        }
+                        
                         print("\(#function) didChangeContent completion after reload supplementary")
                 })
             })
