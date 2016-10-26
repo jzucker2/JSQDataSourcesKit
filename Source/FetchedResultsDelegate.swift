@@ -95,7 +95,9 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                 self.sectionChanges.removeAll()
                 self.objectChanges.removeAll()
                 self.updatedObjects.removeAll()
+                print("------------------------------------------------------")
                 print("\(#function) willChangeContent")
+                print("------------------------------------------------------")
             },
             didChangeSection: { [unowned self] (controller, sectionInfo, sectionIndex, changeType) in
                 print("\(#function) didChangeSection")
