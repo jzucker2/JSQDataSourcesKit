@@ -161,43 +161,90 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
     }
 
     private func applyObjectChanges() {
-        for (changeType, indexPaths) in objectChanges {
-
-            switch(changeType) {
-            case .insert:
-                collectionView?.insertItems(at: indexPaths)
-            case .delete:
-                collectionView?.deleteItems(at: indexPaths)
-            case .update:
-                if let indexPath = indexPaths.first,
-                    let item = updatedObjects[indexPath],
-                    let collectionView = collectionView,
-                    let cell = collectionView.cellForItem(at: indexPath) as? CellFactory.View {
-                    cellFactory.configure(view: cell, item: item, type: .cell, parentView: collectionView, indexPath: indexPath)
+        if Thread.isMainThread {
+            for (changeType, indexPaths) in objectChanges {
+                
+                switch(changeType) {
+                case .insert:
+                    collectionView?.insertItems(at: indexPaths)
+                case .delete:
+                    collectionView?.deleteItems(at: indexPaths)
+                case .update:
+                    if let indexPath = indexPaths.first,
+                        let item = updatedObjects[indexPath],
+                        let collectionView = collectionView,
+                        let cell = collectionView.cellForItem(at: indexPath) as? CellFactory.View {
+                        cellFactory.configure(view: cell, item: item, type: .cell, parentView: collectionView, indexPath: indexPath)
+                    }
+                case .move:
+                    if let deleteIndexPath = indexPaths.first {
+                        self.collectionView?.deleteItems(at: [deleteIndexPath])
+                    }
+                    
+                    if let insertIndexPath = indexPaths.last {
+                        self.collectionView?.insertItems(at: [insertIndexPath])
+                    }
                 }
-            case .move:
-                if let deleteIndexPath = indexPaths.first {
-                    self.collectionView?.deleteItems(at: [deleteIndexPath])
-                }
-
-                if let insertIndexPath = indexPaths.last {
-                    self.collectionView?.insertItems(at: [insertIndexPath])
+            }
+        } else {
+            DispatchQueue.main.async {
+                for (changeType, indexPaths) in self.objectChanges {
+                    
+                    switch(changeType) {
+                    case .insert:
+                        self.collectionView?.insertItems(at: indexPaths)
+                    case .delete:
+                        self.collectionView?.deleteItems(at: indexPaths)
+                    case .update:
+                        if let indexPath = indexPaths.first,
+                            let item = self.updatedObjects[indexPath],
+                            let collectionView = self.collectionView,
+                            let cell = self.collectionView?.cellForItem(at: indexPath) as? CellFactory.View {
+                            self.cellFactory.configure(view: cell, item: item, type: .cell, parentView: collectionView, indexPath: indexPath)
+                        }
+                    case .move:
+                        if let deleteIndexPath = indexPaths.first {
+                            self.collectionView?.deleteItems(at: [deleteIndexPath])
+                        }
+                        
+                        if let insertIndexPath = indexPaths.last {
+                            self.collectionView?.insertItems(at: [insertIndexPath])
+                        }
+                    }
                 }
             }
         }
+            
     }
 
     private func applySectionChanges() {
-        for (changeType, sectionIndex) in sectionChanges {
-            let section = IndexSet(integer: sectionIndex)
-
-            switch(changeType) {
-            case .insert:
-                collectionView?.insertSections(section)
-            case .delete:
-                collectionView?.deleteSections(section)
-            default:
-                break
+        if Thread.isMainThread {
+            for (changeType, sectionIndex) in sectionChanges {
+                let section = IndexSet(integer: sectionIndex)
+                
+                switch(changeType) {
+                case .insert:
+                    collectionView?.insertSections(section)
+                case .delete:
+                    collectionView?.deleteSections(section)
+                default:
+                    break
+                }
+            }
+        } else {
+            DispatchQueue.main.async {
+                for (changeType, sectionIndex) in self.sectionChanges {
+                    let section = IndexSet(integer: sectionIndex)
+                    
+                    switch(changeType) {
+                    case .insert:
+                        self.collectionView?.insertSections(section)
+                    case .delete:
+                        self.collectionView?.deleteSections(section)
+                    default:
+                        break
+                    }
+                }
             }
         }
     }
@@ -205,7 +252,13 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
     private func reloadSupplementaryViewsIfNeeded() {
         if sectionChanges.count > 0 {
             print("\(#function) will reloadData")
-            collectionView?.reloadData()
+            if Thread.isMainThread {
+                self.collectionView?.reloadData()
+            } else {
+                DispatchQueue.main.async {
+                    self.collectionView?.reloadData()
+                }
+            }
         }
     }
 }
