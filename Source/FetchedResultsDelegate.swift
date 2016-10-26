@@ -254,9 +254,11 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
             print("\(#function) will reloadData")
             if Thread.isMainThread {
                 self.collectionView?.reloadData()
+                print("\(#function) did reloadData sync")
             } else {
                 DispatchQueue.main.async {
                     self.collectionView?.reloadData()
+                    print("\(#function) did reloadData async")
                 }
             }
         }
