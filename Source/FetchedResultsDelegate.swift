@@ -130,7 +130,7 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                         self?.applySectionChanges()
                         print("\(#function) didChangeContent performBatchUpdates barrier work finished section changes")
                     })
-                    self.accessQueue.sync(execute: barrierWorkItem) // or async?
+                    accessQueue.sync(execute: barrierWorkItem) // or async?
                     print("\(#function) didChangeContent performBatchUpdates end")
                     }, completion:{ [weak self] finished in
                         print("\(#function) didChangeContent completion before reload supplementary")
