@@ -126,24 +126,30 @@ public extension DataSourceProvider where CellFactory.View: UICollectionViewCell
         let dataSource = BridgedDataSource(
             numberOfSections: { [unowned self] () -> Int in
                 var result = 0
+                print("\(#function) numberOfSections begin")
                 self.accessQueue.sync {
                     result = self.dataSource.numberOfSections()
                 }
+                print("\(#function) numberOfSections end with: \(result)")
                 return result
             },
             numberOfItemsInSection: { [unowned self] (section) -> Int in
+                print("\(#function) numberOfItemsInSection begin with section: \(section)")
                 var result = 0
                 self.accessQueue.sync {
                     result = self.dataSource.numberOfItems(inSection: section)
                 }
+                print("\(#function) numberOfItemsInSection end with section: \(section) items: \(result)")
                 return result
             })
 
         dataSource.collectionCellForItemAtIndexPath = { [unowned self] (collectionView, indexPath) -> UICollectionViewCell in
+            print("\(#function) cellForItemAtIndexPath begin with indexPath: \(indexPath)")
             var item: CellFactory.Item?
             self.accessQueue.sync {
                 item = self.dataSource.item(atIndexPath: indexPath)
             }
+            print("\(#function) cellForItemAtIndexPath end with indexPath: \(indexPath)")
             return self.cellFactory.collectionCellFor(item: item!, collectionView: collectionView, indexPath: indexPath)
         }
 

@@ -95,11 +95,14 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                 self.sectionChanges.removeAll()
                 self.objectChanges.removeAll()
                 self.updatedObjects.removeAll()
+                print("\(#function) willChangeContent")
             },
             didChangeSection: { [unowned self] (controller, sectionInfo, sectionIndex, changeType) in
+                print("\(#function) didChangeSection")
                 self.sectionChanges.append((changeType, sectionIndex))
             },
             didChangeObject: { [unowned self] (controller, anyObject, indexPath: IndexPath?, changeType, newIndexPath: IndexPath?) in
+                print("\(#function) didChangeObject indexPath: \(indexPath) changeType: \(changeType.rawValue) newIndexPath: \(newIndexPath)")
                 switch changeType {
                 case .insert:
                     if let insertIndexPath = newIndexPath {
@@ -121,6 +124,7 @@ extension FetchedResultsDelegateProvider where CellFactory.View.ParentView == UI
                 }
             },
             didChangeContent: { [unowned self] (controller) in
+                print("\(#function) didChangeContent begin before performBatchUpdates")
                 self.collectionView?.performBatchUpdates({ [weak self] in
                     print("\(#function) didChangeContent performBatchUpdates begin")
                     let barrierWorkItem = DispatchWorkItem(qos: .userInitiated, flags: [.barrier], block: {
